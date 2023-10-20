@@ -77,9 +77,26 @@ int main()
 		/* input */
 		processInput(window);
 
-		/* rendering commands should be here */
+		/* rendering commands next: */
+		
+		/* - We want to clear the screen with a color of our choice. At the
+  		start of frame, we want to clear the screen. Otherwise, we would still see the
+    		results from the previous frame (this could be the effect you're looking for,
+      		but usually you don't). We can clear the screen's color buffer using glClear where
+		we pass in buffer bits to specify which buffer we would like to clear. The possible
+  		bits we can set are "GL_COLOR_BUFFER_BIT", "GL_DEPTH_BUFFER_BIT" and
+    		"GL_STENCIL_BUFFER_BIT". Right now we only care about the color values, so we only
+      		clear the color buffer "GL_COLOR_BUFFER_BIT". */
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
+		/* - Note that we also specify the color to clear the screen with using glClearColor.
+  		Whenever we call glClear and clear the buffer, the entire color buffer will be filled
+    		with the color as configured.
+      		- The first line of code is to select the color (dark green-blueish color), and the
+		second line of code is to clear the buffer and paint the screen.
+  		- As you may recall from the OpenGL chapter, the glClearColor function is a
+    		state-setting function and glClear is a state-using function in that it uses the
+      		current state to retrieve the clearing color from. */
 
 		/* - The glfwSwapBuffers will swap the color buffer (a large 2D buffer that contains
 		color values for each pixel in GLFW’s window) that is used to render to during this
