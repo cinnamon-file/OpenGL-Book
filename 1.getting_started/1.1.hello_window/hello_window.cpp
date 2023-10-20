@@ -1,3 +1,5 @@
+/* This file draws a black screen */
+
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 /* The include file for GLAD includes the required OpenGL headers,
