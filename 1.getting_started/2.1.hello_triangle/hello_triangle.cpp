@@ -12,12 +12,33 @@ void processInput(GLFWwindow *window);
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
+/* - In order for OpenGL to know what to make of your collection of coordinates and color values,
+OpenGL requires you to hint what kinf of render types you want to form with the data. Do we want
+the data redered as a collection of points, a collection of triangles or perhaps just one long line?
+Those hints are called "primitives" and are given to OpenGL while calling any of the "drawing commands".
+Some of these hints are GL_POINTS, GL_TRIANGLES and GL_LINE_STRIP. */
+
+/* - The "vertex shader" takes as input a single vertex. The main purpose is to transform 3D coordinates
+into different 3D coordinates.
+- The primitive "assembly stage" (Shape Assembly) takes as input all the vertices (or vertex,
+if GL_POINTS is chosen as a primitive) from the vertex shader that form a primitive and assembles
+all the point(s) in the primitive shape give; in this case a triangle.
+- The output of the primitive assembly stage is passed to the "geometry shader". The geometry
+shader takes as input a collection of vertices that form a primitive and has the ability to generate
+other shapes by emitting new vertices to form new (or other) primitive(s). In this example case, it
+generates a second triangle out of the given shape.
+- The output of the geometry shader is then passed on to the "rasterization stage" where it maps the
+resulting primitive(s) to the corresponding pixels on the final screen, resulting in fragments for the
+fragment shader to use. Before the fragment shaders run, clipping is performed. Clipping discards
+all fragments that are outside your view, increasing performance. */
 const char *vertexShaderSource = "#version 330 core\n"
     "layout (location = 0) in vec3 aPos;\n"
     "void main()\n"
     "{\n"
     "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
     "}\0";
+/* - A fragment in OpenGL is all the data required for OpenGL to render a single pixel.
+- */
 const char *fragmentShaderSource = "#version 330 core\n"
     "out vec4 FragColor;\n"
     "void main()\n"
