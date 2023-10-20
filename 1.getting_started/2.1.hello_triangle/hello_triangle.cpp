@@ -1,3 +1,5 @@
+/* This file draws a dark green-blueish screen as background, with an orange triangle in the middle */
+
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
