@@ -78,8 +78,6 @@ int main()
 		processInput(window);
 
 		/* rendering commands should be here */
-		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
 
 		/* - The glfwSwapBuffers will swap the color buffer (a large 2D buffer that contains
 		color values for each pixel in GLFW’s window) that is used to render to during this
