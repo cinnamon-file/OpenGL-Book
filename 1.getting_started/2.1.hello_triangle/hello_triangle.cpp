@@ -199,7 +199,8 @@ int main()
     /* - Right now we sent the input vertex data to the GPU and instructed the GPU how it should
     process the vertex data within a vertex and fragment shader. We’re almost there, but not quite yet.
     OpenGL does not yet know how it should interpret the vertex data in memory and how it should connect
-    the vertex data to the vertex shader’s attributes. We’ll be nice and tell OpenGL how to do that. */
+    the vertex data to the vertex shader’s attributes. We’ll be nice and tell OpenGL how to do that.
+    - So, the next step is "Linking Vertex Attributes" (jump to <glVertexAttribPointer> function). */
     // -------------------------------------------------------------------------------------------------
 
     
