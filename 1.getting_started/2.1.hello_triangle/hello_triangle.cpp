@@ -46,7 +46,8 @@ all fragments that are outside your view, increasing performance.
 - A vector in GLSL has a maximum size of 4 and each of its values can be retrieved via vec.x,
 vec.y, vec.z and vec.w .
 - Note that the vec.w component is not used as a position in space (we’re dealing with 3D, not 4D),
-but is used for something called perspective division. */
+but is used for something called "perspective division".
+- We simply forwarded the input of the current "vertex shader" to the shader's output. */
 const char *vertexShaderSource = "#version 330 core\n"
     "layout (location = 0) in vec3 aPos;\n"
     "void main()\n"
@@ -65,7 +66,14 @@ corresponding depth (and stencil) value (we’ll get to those later) of the frag
 check if the resulting fragment is in front or behind other objects and should be discarded accordingly.
 The stage also checks for alpha values (alpha values define the opacity of an object) and blends the
 objects accordingly. So even if a pixel output color is calculated in the fragment shader, the final
-pixel color could still be something entirely different when rendering multiple triangles. */
+pixel color could still be something entirely different when rendering multiple triangles.
+------------------------------------
+- Colors in computer graphics are represented as an array of 4 values: the red, green, blue and
+alpha (opacity) component, commonly abbreviated to RGBA. When defining a color in OpenGL or GLSL
+we set the strength of each component to a value between 0.0 and 1.0.
+- We can declare output values with the out keyword, that we here promptly named FragColor.
+Next we simply assign a vec4 to the color output as an orange color with an alpha value of 1.0
+(1.0 being completely opaque, and 0.0 being completely transparent). */
 const char *fragmentShaderSource = "#version 330 core\n"
     "out vec4 FragColor;\n"
     "void main()\n"
@@ -112,22 +120,39 @@ int main()
     }
 
 
-    // build and compile our shader program
-    // ------------------------------------
-    // vertex shader
-    unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-    glCompileShader(vertexShader);
+    // +++ Build and compile our "Vertex Shader"
+    // -------------------------------------------------------------------------------
+    /* - We create a "vertex"(1), put the "source code" inside it(2), and compile it(3).
+    - In order for OpenGL to use the shader it has to dynamically compile it at run-time from its
+    source code. The first thing we need to do is create a "shader object" (vertex shader), again
+    referenced by an ID. So we store the "vertex shader" as an unsigned int and create the shader
+    with <glCreateShader>.
+    - We provide the type of shader we want to create as an argument to glCreateShader. Since
+    we’re creating a vertex shader we pass in GL_VERTEX_SHADER. */
+    unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER); // (1)
+    /* Next we attach the "shader source code" (vertex shader source) to the
+    shader object (vertex shader) and compile the shader. The second argument specifies
+    how many strings we’re passing as source code. I think it's to put the source code inside the shader*/
+    glShaderSource(vertexShader, 1, &vertexShaderSource, NULL); // (2)
+    glCompileShader(vertexShader); // (3)
+    
     // check for shader compile errors
+    /* integer to indicate success. */
     int success;
+    /* storage container for the error messages (if any). */
     char infoLog[512];
+    /* we check if the compilation was successful with <glGetShaderiv> and put the result in var "success". */
     glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
     if (!success)
     {
         glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
         std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
     }
-    // fragment shader
+
+    
+    // +++ Build and compile our "Fragment Shader"
+    // ----------------------------------------------------------------------------------
+    /* - Same as "Vertex Shader", except we use <GL_FRAGMENT_SHADER>, instead of <GL_VERTEX_SHADER> */
     unsigned int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
     glCompileShader(fragmentShader);
@@ -138,20 +163,46 @@ int main()
         glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
         std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
     }
-    // link shaders
+    
+    // +++ "Link Shaders"
+    /* - To use the recently compiled shaders (Vertex Shader and Fragment Shader), we have to link them
+    to a "shader program" object and then activate this shader program when rendering objects.
+    - The activated shader program’s shaders will be used when we issue render calls.
+    - When linking the shaders into a program it links the outputs of each shader to the inputs of the
+    next shader. This is also where you’ll get linking errors if your outputs and inputs do not match. */
+    // -----------------------------------------------------------------------------------
+    /* - The glCreateProgram function creates a program and returns the ID reference to the newly
+    created program object. */
     unsigned int shaderProgram = glCreateProgram();
+    /* - Now we need to attach the previously compiled shaders to the program object "shaderProgram" and
+    then link them with <glLinkProgram>. */
     glAttachShader(shaderProgram, vertexShader);
     glAttachShader(shaderProgram, fragmentShader);
     glLinkProgram(shaderProgram);
+    /* - The result is a program object that we can activate by calling glUseProgram with the newly
+    created program object as its argument:
+    -> glUseProgram(shaderProgram);
+    - Every shader and rendering call after glUseProgram will now use this program object (and thus
+    the shaders). */
+    
     // check for linking errors
     glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
     if (!success) {
         glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
         std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
     }
+    
+    /* - Oh yeah, and don’t forget to delete the shader objects once we’ve linked them into the program
+    object; we no longer need them anymore. */
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
+    /* - Right now we sent the input vertex data to the GPU and instructed the GPU how it should
+    process the vertex data within a vertex and fragment shader. We’re almost there, but not quite yet.
+    OpenGL does not yet know how it should interpret the vertex data in memory and how it should connect
+    the vertex data to the vertex shader’s attributes. We’ll be nice and tell OpenGL how to do that. */
+    // -------------------------------------------------------------------------------------------------
 
+    
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------
     /* OpenGL only processes 3D coordinates when they’re in a specific range between -1.0 and 1.0 on
@@ -170,7 +221,8 @@ int main()
 
     unsigned int VBO, VAO;
     glGenVertexArrays(1, &VAO);
-    /* Generates a "vertex buffer" (OpenGL object) with a unique ID, using <glGenBuffers> */
+    
+    /* (Gen)erates a "vertex buffer" (OpenGL object) with a unique ID, using <glGenBuffers> */
     glGenBuffers(1, &VBO);
     // bind the Vertex Array Object first, then bind and set vertex buffer(s), and then configure vertex attributes(s).
     glBindVertexArray(VAO);
@@ -203,6 +255,7 @@ int main()
     processes this data, so let’s start building those.*/
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
+    /* - */
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
