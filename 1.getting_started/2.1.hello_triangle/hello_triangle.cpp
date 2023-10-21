@@ -206,8 +206,8 @@ int main()
     // -------------------------------------------------------------------------------------------------
 
     
-    // set up vertex data (and buffer(s)) and configure vertex attributes
-    // ------------------------------------------------------------------
+    // set up vertex data
+    // ------------------------------------------------------------------------------------------------
     /* OpenGL only processes 3D coordinates when they’re in a specific range between -1.0 and 1.0 on
     all 3 axes (x, y and z). All coordinates within this so called normalized device coordinates range
     will end up visible on your screen (and all coordinates outside this region won’t).
@@ -220,8 +220,15 @@ int main()
         -0.5f, -0.5f, 0.0f, // left  
          0.5f, -0.5f, 0.0f, // right 
          0.0f,  0.5f, 0.0f  // top   
-    }; 
+    };
+    // -------------------------------------------------------------------------------------------------
 
+    /* (...) - And that is it! Everything we did the last few million pages led up to this moment, a VAO that
+    stores our vertex attribute configuration and which VBO to use. Usually when you have multiple
+    objects you want to draw, you first generate/configure all the VAOs (and thus the required VBO and
+    attribute pointers) and store those for later use. The moment we want to draw one of our objects, we
+    take the corresponding VAO, bind it, then draw the object and unbind the VAO again, for later use. */
+    
     /* - VAO (Vertex Array Object).
     - VBO (Vertex Buffer Object).
     - A vertex array object (also known as VAO) can be bound just like a vertex buffer object and any
@@ -234,17 +241,23 @@ int main()
     - VAO stores the following:
     (1) Calls to glEnableVertexAttribArray or glDisableVertexAttrib Array.
     (2) Vertex attribute configurations via glVertexAttribPointer.
-    (3) Vertex buffer objects associated with vertex attributes by calls to glVertexAttribPointer.*/
+    (3) Vertex buffer objects associated with vertex attributes by calls to glVertexAttribPointer.
+    - The process to generate a VAO looks similar to that of a VBO: */
     unsigned int VBO, VAO;
     glGenVertexArrays(1, &VAO);
     
     /* (Gen)erates a "vertex buffer" (OpenGL object) with a unique ID, using <glGenBuffers> */
     glGenBuffers(1, &VBO);
+    
     // bind the Vertex Array Object first, then bind and set vertex buffer(s), and then configure vertex attributes(s).
+    /* - To use a VAO, all you have to do is bind the VAO using <glBindVertexArray>.
+    From that point on we should bind/configure the corresponding VBO(s) and attribute pointer(s) and then
+    unbind the VAO for later use. As soon as we want to draw an object, we simply bind the VAO with the
+    preferred settings, before drawing the object and that is it. */
     glBindVertexArray(VAO);
 
     /* - The buffer type of a vertex buffer object is <GL_ARRAY_BUFFER>.
-    - OpenGL allows us to bind to several buffers at once, as long as they have a different buffer type.
+    - OpenGL allows us to bind to several "buffers" at once, as long as they have a different buffer type.
     - We are going to bind the newly created buffer <VBO> to the target <GL_ARRAY_BUFFER> with
     the <glBindBuffer> function.
     - From that point on any buffer calls we make (on the GL_ARRAY_BUFFER target) will be used to
@@ -256,7 +269,7 @@ int main()
     bound buffer. Its first argument(1) is the type of the buffer we want to copy data into: the vertex buffer
     object currently bound to the GL_ARRAY_BUFFER target. The second argument(2) specifies the size
     of the data (in bytes) we want to pass to the buffer; a simple sizeof of the vertex data suffices.
-    The third parameter(3) is the actual data we want to send.
+    The third parameter(3) is the actual data we want to send (the "vertices" defined before).
     The fourth parameter(4) specifies how we want the graphics card to manage the given data. This
     can take 3 forms:
     -> GL_STREAM_DRAW: the data is set only once and used by the GPU at most a few times.
@@ -313,11 +326,14 @@ int main()
 
     
     // note that this is allowed, the call to glVertexAttribPointer registered VBO as the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
+    /* - Unbind GL_ARRAY_BUFFER. This will make that any future buffer calls on the GL_ARRAY_BUFFER target,
+    won't be used to configure VBO buffer, since this buffer will no longer be bound, after this line of code. */
     glBindBuffer(GL_ARRAY_BUFFER, 0); 
 
     // You can unbind the VAO afterwards so other VAO calls won't accidentally modify this VAO, but this rarely happens. Modifying other
     // VAOs requires a call to glBindVertexArray anyways so we generally don't unbind VAOs (nor VBOs) when it's not directly necessary.
     glBindVertexArray(0); 
+    // ----------------------------------------------------------------------------------------------------
 
 
     // uncomment this call to draw in wireframe polygons.
@@ -340,7 +356,12 @@ int main()
         /* Run the "shaderProgram". */
         glUseProgram(shaderProgram);
         glBindVertexArray(VAO); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        /* - The <glDrawArrays> function takes as its first argument the OpenGL primitive type we would
+        like to draw. Since I said at the start we wanted to draw a triangle, and I don’t like lying to you, we
+        pass in GL_TRIANGLES. The second argument specifies the starting index of the vertex array we’d
+        like to draw; we just leave this at 0. The last argument specifies how many vertices we want to draw,
+        which is 3 (we only render 1 triangle from our data, which is exactly 3 vertices long. */
+        glDrawArrays(GL_TRIANGLES, 0, 3); /* Draws primitives using the currently active shader */
         // glBindVertexArray(0); // no need to unbind it every time 
  
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
