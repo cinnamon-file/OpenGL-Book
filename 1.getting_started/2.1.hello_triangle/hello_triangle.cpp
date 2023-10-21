@@ -41,6 +41,8 @@ fragment shader to use. Before the fragment shaders run, clipping is performed. 
 all fragments that are outside your view, increasing performance.
 ---------------------------------------------
 - The vertex shader is in the shader language GLSL (OpenGL Shading Language).
+- When passing data to the vertex attribute, glVertexAttribPointer(0, ..., ..., ..., ..., ...) -> the 0 is
+refering to the (location = 0) that we set as the first value in the data, at the beginning of the buffer.
 - We declare all the input vertex attributes in the vertex shader with the in keyword.
 - Since each vertex has a 3D coordinate we create a vec3 input variable with the name aPos.
 - A vector in GLSL has a maximum size of 4 and each of its values can be retrieved via vec.x,
@@ -220,6 +222,19 @@ int main()
          0.0f,  0.5f, 0.0f  // top   
     }; 
 
+    /* - VAO (Vertex Array Object).
+    - VBO (Vertex Buffer Object).
+    - A vertex array object (also known as VAO) can be bound just like a vertex buffer object and any
+    subsequent vertex attribute calls from that point on will be stored inside the VAO. This has the
+    advantage that when configuring vertex attribute pointers you only have to make those calls once
+    and whenever we want to draw the object, we can just bind the corresponding VAO. This makes
+    switching between different vertex data and attribute configurations as easy as binding a different
+    VAO. All the state we just set is stored inside the VAO.
+    Core OpenGL requires that we use a VAO so it knows what to do with our vertex input.
+    - VAO stores the following:
+    (1) Calls to glEnableVertexAttribArray or glDisableVertexAttrib Array.
+    (2) Vertex attribute configurations via glVertexAttribPointer.
+    (3) Vertex buffer objects associated with vertex attributes by calls to glVertexAttribPointer.*/
     unsigned int VBO, VAO;
     glGenVertexArrays(1, &VAO);
     
@@ -256,10 +271,47 @@ int main()
     processes this data, so let’s start building those.*/
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    /* - */
+    /*
+    _____________________________________
+    |  Vertex1  |  Vertex2  |  Vertex3  |
+    | x | y | z | x | y | z | x | y | z |
+    0   4   8   12  16  20  24  28  32  36  : number of bytes
+    |___|___|___|___|___|___|___|___|___|
+    
+    - Each position data is stored as 32-bit (32/8= 4 byte) floating point values.
+    - Each of those position is composed of 3 values (4 byte * 3 position = 12 byte for each vertex).
+    - The first value in the data is at the beginning of the buffer.
+    - The "stride" = 3 * sizeof(float) = 3 * 4 = 12 byte.
+
+    The function <glVertexAttribPointer> has quite a few parameters:
+    - The first parameter specifies which vertex attribute we want to configure. Remember that we
+    specified the location of the position vertex attribute in the vertex shader with layout (location = 0).
+    This sets the location of the vertex attribute to 0 and since we want to pass data to this vertex
+    attribute, we pass in 0.
+    - The next argument specifies the size of the vertex attribute. The vertex attribute is a vec3 so
+    it is composed of 3 values.
+    - The third argument specifies the type of the data which is GL_FLOAT (a vec* in GLSL consists
+    of floating point values).
+    - The fourth argument specifies if we want the data to be normalized. If we’re inputting integer
+    data types (int, byte) and we’ve set this to GL_TRUE, the integer data is normalized to 0 (or -1 for
+    signed data) and 1 when converted to float. This is not relevant for us so we’ll leave this at GL_FALSE.
+    - The fifth argument is known as the "stride" and tells us the space between consecutive vertex attributes.
+    Since the next set of position data is located exactly 3 times the size of a float away we specify that
+    value as the stride. Note that since we know that the array is tightly packed (there is no space between
+    the next vertex attribute value) we could’ve also specified the stride as 0 to let OpenGL determine the
+    stride (this only works when values are tightly packed). Whenever we have more vertex attributes we have
+    to carefully define the spacing between each vertex attribute but we’ll get to see more examples of that
+    later on.
+    - The last parameter is of type void* and thus requires that weird cast. This is the offset of where
+    the position data begins in the buffer. Since the position data is at the start of the data array
+    this value is just 0. We will explore this parameter in more detail later on.
+    */
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    /* - We should also enable the vertex attribute with glEnableVertexAttribArray giving the vertex
+    attribute location as its argument. */
     glEnableVertexAttribArray(0);
 
+    
     // note that this is allowed, the call to glVertexAttribPointer registered VBO as the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
     glBindBuffer(GL_ARRAY_BUFFER, 0); 
 
@@ -285,6 +337,7 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT);
 
         // draw our first triangle
+        /* Run the "shaderProgram". */
         glUseProgram(shaderProgram);
         glBindVertexArray(VAO); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
         glDrawArrays(GL_TRIANGLES, 0, 3);
