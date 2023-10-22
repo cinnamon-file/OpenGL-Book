@@ -11,6 +11,9 @@ void processInput(GLFWwindow *window);
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
+/* - Since we now have more data to send to the vertex shader, it is necessary to adjust the vertex
+shader to also receive our color value as a vertex attribute input. Note that we set the location of the
+aColor attribute to 1 with the layout specifier. */
 const char *vertexShaderSource ="#version 330 core\n"
     "layout (location = 0) in vec3 aPos;\n"
     "layout (location = 1) in vec3 aColor;\n"
@@ -21,6 +24,8 @@ const char *vertexShaderSource ="#version 330 core\n"
     "   ourColor = aColor;\n"
     "}\0";
 
+/* - Since we no longer use a uniform for the fragment’s color, but now use the ourColor output
+variable we’ll have to change the fragment shader as well. */
 const char *fragmentShaderSource = "#version 330 core\n"
     "out vec4 FragColor;\n"
     "in vec3 ourColor;\n"
@@ -104,6 +109,10 @@ int main()
 
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------
+    /* - We saw in the previous chapter how we can fill a VBO, configure vertex attribute pointers and store
+    it all in a VAO. This time, we also want to add color data to the vertex data. We’re going to add
+    color data as 3 floats to the vertices array. We assign a red, green and blue color to each of
+    the corners of our triangle respectively. */
     float vertices[] = {
         // positions         // colors
          0.5f, -0.5f, 0.0f,  1.0f, 0.0f, 0.0f,  // bottom right
