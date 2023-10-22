@@ -226,7 +226,23 @@ int main()
         /* - Once we have the index/location of the uniform, we can update its values. Instead of passing a
         single color to the fragment shader, let’s spice things up by gradually changing color over time.
         - First, we retrieve the running time in seconds via glfwGetTime(). Then we vary the color in the
-        range of 0.0 until 1.0 by using the sin function and store the result in greenValue. */
+        range of 0.0 until 1.0 by using the sin function and store the result in greenValue.
+        - Then we query for the location of the ourColor uniform using glGetUniformLocation.
+        We supply the shader program and the name of the uniform (that we want to retrieve the location from)
+        to the query function. If glGetUniformLocation returns -1, it could not find the location.
+        - Lastly we can set the uniform value using the glUniform4f function. Note that finding the
+        uniform location does not require you to use the shader program first, but updating a uniform does
+        require you to first use the program (by calling glUseProgram), because it sets the uniform on the
+        currently active shader program.
+        - Because OpenGL is in its core a C library it does not have native support for function overloading,
+        so wherever a function can be called with different types OpenGL defines new functions for each type
+        required; glUniform is a perfect example of this. The function requires a specific postfix for the
+        type of the uniform you want to set. A few of the possible postfixes are:
+            f: the function expects a float as its value.
+            i: the function expects an int as its value.
+            ui: the function expects an unsigned int as its value.
+            3f: the function expects 3 floats as its value.
+            fv: the function expects a float vector/array as its value. */
         double  timeValue = glfwGetTime();
         float greenValue = static_cast<float>(sin(timeValue) / 2.0 + 0.5);
         int vertexColorLocation = glGetUniformLocation(shaderProgram, "ourColor");
