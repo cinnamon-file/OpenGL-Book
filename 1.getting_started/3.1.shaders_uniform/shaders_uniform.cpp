@@ -215,8 +215,8 @@ int main()
         processInput(window);
 
         // render
-        // ------
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+        // clear the colorbuffer
         glClear(GL_COLOR_BUFFER_BIT);
 
         // be sure to activate the shader before any calls to glUniform
@@ -226,14 +226,14 @@ int main()
         /* - Once we have the index/location of the uniform, we can update its values. Instead of passing a
         single color to the fragment shader, let’s spice things up by gradually changing color over time.
         - First, we retrieve the running time in seconds via glfwGetTime(). Then we vary the color in the
-        range of 0.0 until 1.0 by using the sin function and store the result in greenValue.
+        range of (0.0-1.0) by using the sin function and store the result in greenValue.
         - Then we query for the location of the ourColor uniform using glGetUniformLocation.
         We supply the shader program and the name of the uniform (that we want to retrieve the location from)
         to the query function. If glGetUniformLocation returns -1, it could not find the location.
         - Lastly we can set the uniform value using the glUniform4f function. Note that finding the
         uniform location does not require you to use the shader program first, but updating a uniform does
-        require you to first use the program (by calling glUseProgram), because it sets the uniform on the
-        currently active shader program.
+        require you to first use the program (by calling glUseProgram (function above)), because it sets
+        the uniform on the currently active shader program.
         - Because OpenGL is in its core a C library it does not have native support for function overloading,
         so wherever a function can be called with different types OpenGL defines new functions for each type
         required; glUniform is a perfect example of this. The function requires a specific postfix for the
@@ -242,9 +242,21 @@ int main()
             i: the function expects an int as its value.
             ui: the function expects an unsigned int as its value.
             3f: the function expects 3 floats as its value.
-            fv: the function expects a float vector/array as its value. */
+            fv: the function expects a float vector/array as its value.
+            - Whenever you want to configure an option of OpenGL simply pick the overloaded function that
+            corresponds with your type. In our case we want to set 4 floats of the uniform individually so
+            we pass our data via glUniform4f (note that we also could’ve used the fv version).
+            - Now that we know how to set the values of uniform variables, we can use them for rendering. If
+            we want the color to gradually change, we want to update this uniform every frame, otherwise the
+            triangle would maintain a single solid color if we only set it once. So we calculate the
+            greenValue and update the uniform each render iteration.
+            - We update a uniform value each frame before drawing the triangle on glDrawArrays. If you
+            update the uniform correctly you should see the color of your triangle gradually change from
+            green to black and back to green.
+            - As you can see, uniforms are a useful tool for setting attributes that may change every frame,
+            or for interchanging data between your application and your shaders. */
         double  timeValue = glfwGetTime();
-        float greenValue = static_cast<float>(sin(timeValue) / 2.0 + 0.5);
+        float greenValue = static_cast<float>(sin(timeValue) / 2.0 + 0.5); // (0.0-1.0)
         int vertexColorLocation = glGetUniformLocation(shaderProgram, "ourColor");
         glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
 
