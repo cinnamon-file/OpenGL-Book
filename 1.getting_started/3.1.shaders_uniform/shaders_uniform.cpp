@@ -1,3 +1,5 @@
+/* Draws a triangle that gradually changes from green to black and back to green,
+by updating the uniform value each frame, before drawing. */
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
