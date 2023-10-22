@@ -15,9 +15,9 @@ const unsigned int SCR_HEIGHT = 600;
 shader to also receive our color value as a vertex attribute input. Note that we set the location of the
 aColor attribute to 1 with the layout specifier. */
 const char *vertexShaderSource ="#version 330 core\n"
-    "layout (location = 0) in vec3 aPos;\n"
-    "layout (location = 1) in vec3 aColor;\n"
-    "out vec3 ourColor;\n"
+    "layout (location = 0) in vec3 aPos;\n" // position has attribute position 0
+    "layout (location = 1) in vec3 aColor;\n" // color has attribute position 1
+    "out vec3 ourColor;\n" // output a color to the fragment shader
     "void main()\n"
     "{\n"
     "   gl_Position = vec4(aPos, 1.0);\n"
@@ -130,6 +130,34 @@ int main()
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
+    /* - Because we added another vertex attribute and updated the VBO’s memory we have to reconfigure
+    the vertex attribute pointers. The updated data in the VBO’s memory now looks a bit like:
+
+    "layout (location = 0) in vec3 aPos;\n" // position has attribute position 0
+    "layout (location = 1) in vec3 aColor;\n" // color has attribute position 1
+    
+    |       Vertex 1        |       Vertex 2        |       Vertex 3        |
+    | x | y | z | R | G | B | x | y | z | R | G | B | x | y | z | R | G | B |
+    0   4   8   12  16  20  24  28  32  36  40  44  48  52  56  60  64  68  72 : byte
+    |___________|___________^           ^
+     (position):|stride: 24             |
+      -OFFSET: 0|(starts at 0)          |
+                |                       |
+                V_______________________|
+                    (color): stride: 24
+                    -OFFSET: 12 (starts at 12)
+
+    - Knowing the current layout we can update the vertex format with glVertexAttribPointer.
+    - This time we are configuring the vertex attribute on attribute location 1 from
+    "layout (location = 1) in vec3 aColor;". The color values have a size of 3 floats and we do not
+    normalize the values.
+    - Since we now have two vertex attributes we have to re-calculate the stride value. To get the next
+    attribute value (e.g. the next x component of the position vector) in the data array we have to move
+    6 floats to the right, three for the position values and three for the color values. This gives us a
+    stride value of 6 times the size of a float in bytes (= 24 bytes). Also, this time we have to specify
+    an offset. For each vertex, the position vertex attribute is first so we declare an offset of 0. The color
+    attribute starts after the position data so the offset is 3 * sizeof(float) in bytes (= 12 bytes).
+    */
     // position attribute
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
