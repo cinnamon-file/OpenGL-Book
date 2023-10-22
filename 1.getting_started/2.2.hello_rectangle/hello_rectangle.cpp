@@ -1,3 +1,4 @@
+/* Draws rectangle by storing 4 vertices, and then just specify at which order we’d like to draw them. */
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
