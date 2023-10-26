@@ -47,6 +47,9 @@ int main()
 
     // build and compile our shader program
     // ------------------------------------
+    /* - And there we have it, a completed shader class at /includes/learnopeng/shader_s.h. Using the shader class
+    is fairly easy; we create a shader object once and from that point on simply start using it.
+    - Here we stored the vertex and fragment shader source code in two files called shader.vs and shader.fs. */
     Shader ourShader("3.3.shader.vs", "3.3.shader.fs"); // you can name your shader files however you like
 
     // set up vertex data (and buffer(s)) and configure vertex attributes
